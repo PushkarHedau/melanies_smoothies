@@ -1,7 +1,8 @@
 # Import python packages
 import streamlit as st
-from snowflake.snowpark.functions import col
 from snowflake.snowpark import Session
+from snowflake.snowpark.functions import col
+import pandas as pd
 import requests
 
 # Write directly to the app
@@ -24,11 +25,15 @@ cnx = st.experimental_connection("snowflake")
 session = cnx.session
 
 # Fetch fruit options from Snowflake
-my_dataframe = session.table("smoothies.public.fruit_options").select(col('FRUIT_NAME')).to_pandas()
+query = """
+SELECT FRUIT_NAME 
+FROM smoothies.public.fruit_options
+"""
+fruit_options_df = session.sql(query).to_pandas()
 
 # Display multiselect for ingredients
 ingredients_list = st.multiselect(
-    'Choose up to 5 ingredients:', my_dataframe['FRUIT_NAME'].tolist()
+    'Choose up to 5 ingredients:', fruit_options_df['FRUIT_NAME'].tolist()
 )
 
 if ingredients_list: 
