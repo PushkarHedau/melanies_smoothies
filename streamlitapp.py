@@ -1,56 +1,113 @@
 # Import python packages
 import streamlit as st
-from snowflake.snowpark import Session
 from snowflake.snowpark.functions import col
-import pandas as pd
 import requests
-
 # Write directly to the app
-st.title(":cup_with_straw: Customize Your Smoothie :cup_with_straw:")
+st.title(":cup_with_straw: Customize Your Smoothie! :cup_with_straw:")
 st.write(
-    """Choose the fruits you want in your custom Smoothie!
-    """
-)
+    """Choose the fruit you want in your custom Smoothie!
+    """)
 
-# Select favorite fruit
-option = st.selectbox(
-    "What is your favorite fruit?",
-    ("Banana", "Strawberries", "Peaches"),
-)
-
-st.write("Your favorite fruit is:", option)
-
-# Connect to Snowflake
-cnx = st.experimental_connection("snowflake")
-session = cnx.session
-
-# Fetch fruit options from Snowflake
-query = """
-SELECT FRUIT_NAME 
-FROM smoothies.public.fruit_options
-"""
-fruit_options_df = session.sql(query).to_pandas()
-
-# Display multiselect for ingredients
+ 
+name_on_order =  st.text_input('Name of smoothie:')
+st.write('The name on your smoothie will be:', name_on_order)
+#Import python script
+cnx = st. connection ("snowflake")
+session = cnx.session()
+my_dataframe = session.table("smoothies.public.fruit_options").select(col('FRUIT_NAME'),col('SEARCH_ON'))
+#st.dataframe(data=my_dataframe, use_container_width=True)
+#st.stop()
+ 
+pd_df=my_dataframe.to_pandas()
+# st.dataframe(pd_df)
+# st.stop()
+ 
 ingredients_list = st.multiselect(
-    'Choose up to 5 ingredients:', fruit_options_df['FRUIT_NAME'].tolist()
+    'Choose up to 5 ingredients:'
+    , my_dataframe
+    , max_selections=5
 )
+if ingredients_list:
+    ingredients_string = ''
+    for fruit_chosen in  ingredients_list:
+        ingredients_string += fruit_chosen + ' '
+        search_on=pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
+        st.write('The search value for ', fruit_chosen,' is ', search_on, '.')
+        st.subheader(fruit_chosen + 'Nutrition Information')
+        fruityvice_response = requests.get("https://fruityvice.com/api/fruit/watermelon")
+        fv_df = st.dataframe(data=fruityvice_response.json(), use_container_width=True)
+    # st. write(ingredients_string)
+    # my_insert_stmt = """ insert into smoothies.public.orders(ingredients,name_on_order)
+    #     values ('""" + Ingredients_string + """','""" + name_on_order + """')"""
+    my_insert_stmt = """ insert into smoothies.public.orders(ingredients)
+            values ('""" + ingredients_string + """')"""
+ 
 
-if ingredients_list: 
-    ingredients_string = ' '.join(ingredients_list)
-    st.write(ingredients_string)
-
-    my_insert_stmt = f"""
-        INSERT INTO smoothies.public.orders (ingredients)
-        VALUES ('{ingredients_string}')
-    """
-
-    if ingredients_string:
+    # st.write(my_insert_stmt)
+    time_to_insert = st.button('Submit Order')
+    if time_to_insert:
         session.sql(my_insert_stmt).collect()
-    st.success('Your Smoothie is ordered!', icon="✅")
-
-# Fetch data from Fruityvice API and display it
-fruityvice_response = requests.get("https://fruityvice.com/api/fruit/watermelon")
-st.text(fruityvice_response.json())
-fv_df = pd.json_normalize(fruityvice_response.json())
-st.dataframe(data=fv_df, use_container_width=True)
+        st.success('Your Smoothie is ordered!', icon="✅")
+ 
+ 
+# # Import python packages
+# import streamlit as st
+# # from snowflake.snowpark.context import get_active_session
+# from snowflake.snowpark.functions import col
+ 
+# # Write directly to the app
+# st.title(":cup_with_straw: Customize Your Smoothie!:cup_with_straw:")
+# st.write(
+#     """Choose the Fruits you want in your custom Smoothie!
+#     """
+# )
+ 
+# # import streamlit as st
+ 
+# # option = st.selectbox(
+# #     "How would you like to be contacted?",
+# #     ("Email", "Home phone", "Mobile phone"))
+ 
+# # st.write("You selected:", option)
+ 
+# # option = st.selectbox(
+# #     "What is your favorite fruit?",
+# #     ("Banana", "Stawberries", "Peaches"))
+ 
+# # st.write("Your Favorite fruit is:", option)
+ 
+# from snowflake.snowpark.functions import col
+# cnx = st.connection("snowflake")
+# session = cnx.session()
+# my_dataframe = session.table("smoothies.public.fruit_options").select(col('FRUIT_NAME'))
+# # st.dataframe(data=my_dataframe, use_container_width=True)
+ 
+# Ingredients_list =  st.multiselect(
+#     'Choose up to 5 ingredients: '
+#     , my_dataframe
+# )
+ 
+# if Ingredients_list:
+#     # st.write(Ingredients_list)
+#     # st.text(Ingredients_list)
+ 
+#     Ingredients_string = ''
+ 
+#     for fruit_chosen in Ingredients_list:
+#         Ingredients_string += fruit_chosen + ' '
+ 
+#     # st.write(Ingredients_string)
+ 
+ 
+#     my_insert_stmt = """ insert into smoothies.public.orders(ingredients)
+#             values ('""" + Ingredients_string + """')"""
+ 
+#     # st.write(my_insert_stmt)
+#     time_to_insert = st.button('Submit Order')
+ 
+#     if time_to_insert:
+#         session.sql(my_insert_stmt).collect()
+#         st.success('Your Smoothie is ordered!', icon="✅")
+ 
+    
+has context menu
