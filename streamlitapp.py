@@ -9,7 +9,7 @@ st.write(
     """)
 
  
-name_on_order =  st.text_input('Name of smoothie:')
+name_on_order =  st.text_input('Name of smoothie:' , )
 st.write('The name on your smoothie will be:', name_on_order)
 #Import python script
 cnx = st. connection ("snowflake")
