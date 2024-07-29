@@ -19,7 +19,7 @@ option = st.selectbox(
 )
 
 st.write("You favorite fruit is :", option)
-from snowflake.snowpark.functions import col
+
 
 cnx = st.connection("snowflake")
 session = cnx.session
